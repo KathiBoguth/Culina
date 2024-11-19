@@ -20,7 +20,7 @@ import androidx.compose.ui.unit.dp
 fun BackgroundPanel(innerPadding: PaddingValues, content: @Composable () -> Unit) {
     val color = MaterialTheme.colorScheme.background
     val colorWithOpacity =
-        Color(color.red.toFloat(), color.green.toFloat(), color.blue.toFloat(), 0.5f)
+        Color(color.red.toFloat(), color.green.toFloat(), color.blue.toFloat(), 0.6f)
     Box(
         modifier = with(Modifier) {
             fillMaxSize()

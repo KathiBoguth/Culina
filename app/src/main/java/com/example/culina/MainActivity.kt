@@ -4,17 +4,11 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.animation.EnterTransition
-import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Scaffold
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -25,16 +19,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.paint
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.culina.dailyCooking.DailyCookingOverview
-import com.example.culina.home.HomeScreen
-import com.example.culina.quiz.Quiz
-import com.example.culina.social.Social
 import com.example.culina.ui.theme.AppTheme
 
 class MainActivity : ComponentActivity() {
@@ -68,12 +54,11 @@ class MainActivity : ComponentActivity() {
                             fillMaxSize()
                                 .paint(
                                     painterResource(id = R.drawable.kitchen),
-                                    alignment = BiasAlignment(currentPosition, -1f),
+                                    alignment = BiasAlignment(currentPosition.toFloat(), -1f),
                                     contentScale = ContentScale.Crop
                                 )
 
                         }) {
-
                         AppNavHost(navController = navController, innerPadding = innerPadding)
                     }
                     Row(Modifier.fillMaxSize(), verticalAlignment = Alignment.Bottom) {
@@ -84,75 +69,4 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-}
-
-val navItemOrder = listOf("home", "quiz", "cooking", "social")
-
-@Composable
-fun AppNavHost(
-    navController: NavHostController,
-    innerPadding: PaddingValues,
-    startDestination: String = BottomNavItem.Home.route,
-) {
-
-    NavHost(navController = navController, startDestination = startDestination) {
-        composable(
-            BottomNavItem.Home.route,
-            enterTransition = {
-                return@composable slideIn(initialState, targetState)
-            },
-            exitTransition = { return@composable slideOut(initialState, targetState) }) {
-            HomeScreen(
-                innerPadding
-            )
-        }
-        composable(BottomNavItem.Quiz.route, enterTransition = {
-            return@composable slideIn(initialState, targetState)
-        }, exitTransition = { return@composable slideOut(initialState, targetState) }) {
-            Quiz(
-                innerPadding
-            )
-        }
-        composable(
-            BottomNavItem.Cooking.route,
-            enterTransition = {
-                return@composable slideIn(initialState, targetState)
-            },
-            exitTransition = { return@composable slideOut(initialState, targetState) }) {
-            DailyCookingOverview(
-                innerPadding
-            )
-        }
-        composable(BottomNavItem.Social.route, enterTransition = {
-            return@composable slideIn(initialState, targetState)
-        }, exitTransition = { return@composable slideOut(initialState, targetState) }) {
-            Social(
-                innerPadding
-            )
-        }
-    }
-}
-
-fun slideIn(initialState: NavBackStackEntry, targetState: NavBackStackEntry): EnterTransition {
-    return if (navItemOrder.indexOf(initialState.destination.route) > navItemOrder.indexOf(
-            targetState.destination.route
-        )
-    ) {
-        slideInHorizontally(initialOffsetX = { -it })
-    } else {
-        slideInHorizontally(initialOffsetX = { it })
-    }
-
-}
-
-fun slideOut(initialState: NavBackStackEntry, targetState: NavBackStackEntry): ExitTransition {
-    return if (navItemOrder.indexOf(initialState.destination.route) > navItemOrder.indexOf(
-            targetState.destination.route
-        )
-    ) {
-        slideOutHorizontally(targetOffsetX = { it })
-    } else {
-        slideOutHorizontally(targetOffsetX = { -it })
-    }
-
 }

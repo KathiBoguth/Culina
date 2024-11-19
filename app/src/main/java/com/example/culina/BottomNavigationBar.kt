@@ -10,15 +10,16 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.rememberNavController
 import com.example.culina.ui.theme.AppTheme
 
@@ -46,9 +47,17 @@ fun BottomNavigationBar(navController: NavController) {
                         colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.secondary)
                     )
                 },
-                label = { Text( item.label) },
+                label = { Text(item.label) },
                 selected = selectedItem == index,
-                onClick = { selectedItem = index; navController.navigate(item.route) },
+                onClick = {
+                    selectedItem = index; navController.navigate(item.route) {
+                    popUpTo(navController.graph.findStartDestination().id) {
+                        saveState = true
+                    }
+                    restoreState = true
+                    launchSingleTop = true
+                }
+                },
             )
         }
     }
