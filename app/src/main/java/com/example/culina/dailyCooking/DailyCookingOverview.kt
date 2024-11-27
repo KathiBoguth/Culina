@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -15,9 +16,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.culina.R
 import com.example.culina.common.BackgroundPanel
-import com.example.culina.common.CulinaButtonPrimary
+import com.example.culina.common.CulinaButtonIcon
 
 @Composable
 fun DailyCookingOverview(innerPadding: PaddingValues) {
@@ -26,6 +28,10 @@ fun DailyCookingOverview(innerPadding: PaddingValues) {
     var capturedImageUri by rememberSaveable {
         mutableStateOf<Uri>(Uri.EMPTY)
     }
+
+    val viewModel: DailyCookingViewModel = hiltViewModel()
+
+    val dailyMealName by viewModel.name.collectAsState("")
 
     fun showPhotoSelectScreen() {
         photoSelectActive = true
@@ -40,8 +46,8 @@ fun DailyCookingOverview(innerPadding: PaddingValues) {
     BackgroundPanel(innerPadding) {
         if (photoSelectActive) {
             PhotoSelectScreen({ uri -> updateImageUri(uri) })
-        } else if (showUploadMealScreen) {
-            UploadMealScreen(capturedImageUri, emptySet())
+        } else if (showUploadMealScreen || dailyMealName != "") {
+            UploadMealScreen(capturedImageUri)
         } else {
             Row(
                 Modifier
@@ -53,7 +59,7 @@ fun DailyCookingOverview(innerPadding: PaddingValues) {
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    CulinaButtonPrimary(
+                    CulinaButtonIcon(
                         "Cooked Today?",
                         R.drawable.baseline_photo_camera_24,
                         ::showPhotoSelectScreen

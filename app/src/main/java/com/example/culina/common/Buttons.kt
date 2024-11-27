@@ -15,11 +15,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.culina.ui.theme.AppTheme
 import com.example.culina.R
+import com.example.culina.ui.theme.AppTheme
 
 @Composable
-fun CulinaButtonPrimary(text: String, @DrawableRes iconId: Int, onClick: () -> Unit) {
+fun CulinaButtonIcon(text: String, @DrawableRes iconId: Int, onClick: () -> Unit) {
 
     Button(
         onClick = {
@@ -27,19 +27,46 @@ fun CulinaButtonPrimary(text: String, @DrawableRes iconId: Int, onClick: () -> U
         }, colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.primary),
         shape = MaterialTheme.shapes.medium
     ) {
-        Column(verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
-            Icon(painterResource(iconId), contentDescription = "Icon", modifier = Modifier.size(48.dp))
+        Column(
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Icon(
+                painterResource(iconId),
+                contentDescription = "Icon",
+                modifier = Modifier.size(48.dp)
+            )
             Text(text)
 
         }
     }
 }
 
+@Composable
+fun CulinaButtonPrimary(text: String, onClick: () -> Unit) {
+    Button(
+        onClick = { onClick() },
+        colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.primary),
+        shape = MaterialTheme.shapes.medium
+    ) {
+        Text(text)
+    }
+}
+
 @Preview()
+@Composable
+fun CulinaButtonIconPreview() {
+    AppTheme(dynamicColor = false) {
+
+        CulinaButtonIcon("Cooked Today?", R.drawable.baseline_photo_camera_24, {})
+    }
+}
+
+@Preview
 @Composable
 fun CulinaButtonPrimaryPreview() {
     AppTheme(dynamicColor = false) {
 
-        CulinaButtonPrimary("Cooked Today?", R.drawable.baseline_photo_camera_24, {})
+        CulinaButtonPrimary("Click!") { }
     }
 }

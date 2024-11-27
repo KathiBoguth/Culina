@@ -23,8 +23,8 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -39,9 +39,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.culina.R
+import com.example.culina.common.CulinaButtonPrimary
 import com.example.culina.ui.theme.AppTheme
 import kotlin.math.roundToInt
 
@@ -67,19 +69,24 @@ fun MealPhoto(imageUri: Uri) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun UploadMealScreen(imageUri: Uri, ingredients: Set<String>) {
-    var ingredientList by rememberSaveable { mutableStateOf(ingredients) }
-    var sliderPosition by rememberSaveable { mutableFloatStateOf(0f) }
-    var title by rememberSaveable { mutableStateOf("") }
+fun UploadMealScreen(imageUri: Uri) {
+    val viewModel: DailyCookingViewModel = hiltViewModel()
+
+    val ingredientList by viewModel.ingredients.collectAsState(emptySet())
+    val sliderPosition: Int by viewModel.rating.collectAsState(0)
+    val title by viewModel.name.collectAsState("")
     var ingredient by rememberSaveable { mutableStateOf("") }
 
+    val context = LocalContext.current
+
     fun addIngredient() {
-        ingredientList = ingredientList.plusElement(ingredient)
+        viewModel.onIngredientsChange(ingredientList.plusElement(ingredient))
         ingredient = ""
     }
 
     fun deleteIngredient(ingredient: String) {
-        ingredientList = ingredientList.minusElement(ingredient)
+        viewModel.onIngredientsChange(ingredientList.minusElement(ingredient))
+
     }
     Column(
         verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -88,7 +95,7 @@ fun UploadMealScreen(imageUri: Uri, ingredients: Set<String>) {
         MealPhoto(imageUri)
         TextField(
             value = title,
-            onValueChange = { it -> title = it },
+            onValueChange = { it -> viewModel.onNameChange(it) },
             label = { Text("Title") }
         )
         TextField(
@@ -120,8 +127,8 @@ fun UploadMealScreen(imageUri: Uri, ingredients: Set<String>) {
         Row(
             Modifier.Companion
                 .fillMaxWidth()
-                .padding(12.dp)) {
-
+                .padding(12.dp)
+        ) {
             Text(
                 "Rate yourself!",
                 color = MaterialTheme.colorScheme.primary,
@@ -129,13 +136,26 @@ fun UploadMealScreen(imageUri: Uri, ingredients: Set<String>) {
             )
         }
         Row(Modifier.Companion.width(240.dp)) {
-            Slider(sliderPosition,
-                onValueChange = { sliderPosition = it },
+            Slider(sliderPosition.toFloat(),
+                onValueChange = { viewModel.onRatingChange(it.roundToInt()) },
                 valueRange = 0f..5f,
                 steps = 4,
                 track = { sliderState -> RatingTrack(sliderState.value.roundToInt()) },
                 thumb = {}
             )
+        }
+        CulinaButtonPrimary("Save & Upload") {
+            val imageByteArray = context.contentResolver.openInputStream(imageUri)
+                ?.use { it.buffered().readBytes() }
+            if (imageByteArray != null) {
+                viewModel.onSaveDailyCooking(
+                    name = title,
+                    ingredients = ingredientList,
+                    image = imageUri.path,
+                    rating = sliderPosition
+                )
+
+            }
         }
     }
 }
@@ -185,7 +205,7 @@ fun DeleteIngredientButton(onDeleteClick: () -> Unit) {
 @Composable
 fun UploadMealPreview() {
     AppTheme(dynamicColor = false) {
-        UploadMealScreen(Uri.EMPTY, setOf("zucchini", "pepper"))
+        UploadMealScreen(Uri.EMPTY)
 
     }
 }
