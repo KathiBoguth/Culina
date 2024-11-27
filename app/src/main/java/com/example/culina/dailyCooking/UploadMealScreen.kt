@@ -1,5 +1,6 @@
 package com.example.culina.dailyCooking
 
+import android.graphics.Bitmap
 import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
@@ -32,6 +33,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -45,6 +47,7 @@ import coil.request.ImageRequest
 import com.example.culina.R
 import com.example.culina.common.CulinaButtonPrimary
 import com.example.culina.ui.theme.AppTheme
+import java.io.File
 import kotlin.math.roundToInt
 
 @Composable
@@ -67,6 +70,20 @@ fun MealPhoto(imageUri: Uri) {
     )
 }
 
+@Composable
+fun MealPhotoBitmap(bitmap: Bitmap) {
+    Image(
+        bitmap = bitmap.asImageBitmap(),
+        contentDescription = "Daily Meal",
+        modifier = Modifier.Companion
+            .padding(4.dp)
+            .size(150.dp)
+            .border(3.dp, MaterialTheme.colorScheme.primary, CircleShape)
+            .clip(CircleShape),
+        contentScale = ContentScale.Companion.Crop,
+    )
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UploadMealScreen(imageUri: Uri) {
@@ -75,6 +92,7 @@ fun UploadMealScreen(imageUri: Uri) {
     val ingredientList by viewModel.ingredients.collectAsState(emptySet())
     val sliderPosition: Int by viewModel.rating.collectAsState(0)
     val title by viewModel.name.collectAsState("")
+    val imageBitmap by viewModel.imageBitmap.collectAsState(null)
     var ingredient by rememberSaveable { mutableStateOf("") }
 
     val context = LocalContext.current
@@ -92,7 +110,11 @@ fun UploadMealScreen(imageUri: Uri) {
         verticalArrangement = Arrangement.spacedBy(12.dp),
         horizontalAlignment = Alignment.Companion.CenterHorizontally
     ) {
-        MealPhoto(imageUri)
+        if (imageBitmap == null) {
+            MealPhoto(imageUri)
+        } else {
+            MealPhotoBitmap(imageBitmap!!)
+        }
         TextField(
             value = title,
             onValueChange = { it -> viewModel.onNameChange(it) },
@@ -149,10 +171,8 @@ fun UploadMealScreen(imageUri: Uri) {
                 ?.use { it.buffered().readBytes() }
             if (imageByteArray != null) {
                 viewModel.onSaveDailyCooking(
-                    name = title,
-                    ingredients = ingredientList,
-                    image = imageUri.path,
-                    rating = sliderPosition
+                    imageName = File(imageUri.path ?: "test.png").name,
+                    image = imageByteArray
                 )
 
             }

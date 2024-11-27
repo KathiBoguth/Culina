@@ -14,13 +14,26 @@ class DailyCookingRepositoryImpl @Inject constructor(
     private val postgrest: Postgrest,
     private val storage: Storage,
 ) : DailyCookingRepository {
-    override suspend fun createDailyCooking(dailyCooking: DailyCooking): Boolean {
+    override suspend fun createDailyCooking(
+        dailyCooking: DailyCooking,
+        imageName: String,
+        imageFile: ByteArray
+    ): Boolean {
         return try {
             withContext(Dispatchers.IO) {
+                val imageId = if (imageFile.isNotEmpty()) {
+                    storage.from("dailyMealImage").upload(
+                        path = imageName,
+                        data = imageFile,
+                        options = { upsert = true }
+                    ).path
+                } else {
+                    null
+                }
                 val newDailyCookingDto = NewDailyCookingDto(
                     name = dailyCooking.name,
                     ingredients = dailyCooking.ingredients,
-                    image = dailyCooking.image,
+                    image = imageId,
                     rating = dailyCooking.rating,
                 )
                 postgrest.from("dailycooking").insert(newDailyCookingDto)
@@ -99,16 +112,14 @@ class DailyCookingRepositoryImpl @Inject constructor(
         rating: Int
     ) {
         withContext(Dispatchers.IO) {
-            println(imageFile.isNotEmpty())
             if (imageFile.isNotEmpty()) {
                 val image =
                     storage.from("dailyMealImage").upload(
-                        path = "$imageName.png",
+                        path = imageName,
                         data = imageFile,
                         options = { upsert = true }
                     )
-                println(image)
-                val result = postgrest.from("dailycooking").update({
+                postgrest.from("dailycooking").update({
                     set("name", name)
                     set("ingredients", ingredients)
                     set("image", image.path)
@@ -118,7 +129,6 @@ class DailyCookingRepositoryImpl @Inject constructor(
                         eq("id", id)
                     }
                 }
-                println(result.data)
             } else {
                 postgrest.from("dailycooking").update({
                     set("name", name)
@@ -130,6 +140,17 @@ class DailyCookingRepositoryImpl @Inject constructor(
                     }
                 }
             }
+        }
+    }
+
+    override suspend fun getDailyCookingImage(path: String): ByteArray? {
+        return try {
+            withContext(Dispatchers.IO) {
+                storage.from("dailyMealImage").downloadPublic(path)
+            }
+        } catch (e: kotlin.Exception) {
+            println(e.message)
+            null
         }
     }
 }

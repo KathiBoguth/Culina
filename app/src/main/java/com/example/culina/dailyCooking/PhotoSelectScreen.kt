@@ -18,7 +18,7 @@ import java.time.format.DateTimeFormatter
 fun PhotoSelectScreen(updateImageUri: (Uri) -> Unit) {
     val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
     val dateString = LocalDate.now().format(formatter)
-    val imageUri = LocalContext.current.createTempPictureUri(fileName = "meal_${dateString}.jpg")
+    val imageUri = LocalContext.current.createTempPictureUri(fileName = "meal_${dateString}")
     val cameraLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { captured ->
             if (captured) {
@@ -42,7 +42,7 @@ fun PhotoSelectScreen(updateImageUri: (Uri) -> Unit) {
 
 fun Context.createTempPictureUri(
     provider: String = "${BuildConfig.APPLICATION_ID}.provider",
-    fileName: String = "picture_${System.currentTimeMillis()}",
+    fileName: String,
     fileExtension: String = ".png"
 ): Uri {
     val tempFile = File.createTempFile(

@@ -5,7 +5,11 @@ import java.util.Date
 
 
 interface DailyCookingRepository {
-    suspend fun createDailyCooking(dailyCooking: DailyCooking): Boolean
+    suspend fun createDailyCooking(
+        dailyCooking: DailyCooking, imageName: String,
+        imageFile: ByteArray,
+    ): Boolean
+
     suspend fun getAllDailyCooking(): List<NewDailyCookingDto>?
     suspend fun getDailyCooking(id: String): NewDailyCookingDto?
     suspend fun getDailyCookingByDate(date: Date): NewDailyCookingDto?
@@ -18,4 +22,6 @@ interface DailyCookingRepository {
         imageFile: ByteArray,
         rating: Int
     )
+
+    suspend fun getDailyCookingImage(path: String): ByteArray?
 }

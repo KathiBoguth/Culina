@@ -1,5 +1,7 @@
 package com.example.culina.dailyCooking
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.culina.dailyCooking.database.DailyCooking
@@ -27,8 +29,8 @@ class DailyCookingViewModel @Inject constructor(
     private val _rating = MutableStateFlow(0)
     val rating: Flow<Int> = _rating
 
-    private val _imageUrl = MutableStateFlow("")
-    val imageUrl: Flow<String> = _imageUrl
+    private val _imageBitmap: MutableStateFlow<Bitmap?> = MutableStateFlow(null)
+    val imageBitmap: Flow<Bitmap?> = _imageBitmap
 
     init {
         getDailyCookingForToday()
@@ -43,8 +45,19 @@ class DailyCookingViewModel @Inject constructor(
                 _name.emit(result.name)
                 _ingredients.emit(result.ingredients)
                 _rating.emit(result.rating)
+                if (result.image != null) {
+                    val imageByteArray = dailyCookingRepository.getDailyCookingImage(result.image)
+                    if (imageByteArray != null) {
+                        _imageBitmap.emit(
+                            BitmapFactory.decodeByteArray(
+                                imageByteArray,
+                                0,
+                                imageByteArray.size
+                            )
+                        )
+                    }
+                }
             }
-
         }
     }
 
@@ -56,44 +69,31 @@ class DailyCookingViewModel @Inject constructor(
         _rating.value = rating
     }
 
-    fun onImageChange(url: String) {
-        _imageUrl.value = url
-    }
-
     fun onIngredientsChange(ingredients: Set<String>) {
         _ingredients.value = ingredients
     }
 
     fun onSaveDailyCooking(
-        name: String,
-        ingredients: Set<String>,
-        image: String?,
-        rating: Int,
+        image: ByteArray,
+        imageName: String,
     ) {
         viewModelScope.launch {
             dailyCookingRepository.createDailyCooking(
                 DailyCooking(
-                    name = name,
-                    ingredients = ingredients,
-                    image = image,
-                    rating = rating,
-                )
+                    name = _name.value,
+                    ingredients = _ingredients.value,
+                    image = imageName,
+                    rating = _rating.value,
+                ),
+                imageName = imageName,
+                imageFile = image
             )
-//            dailyMealRepository.updateDailyMeal(
-//                id = _dailyMeal.value?.id ?: "",
-//                ingredients = _ingredients.value,
-//                name = _name.value,
-//                imageFile = image,
-//                imageName = "image_${_dailyMeal.value?.id}",
-//                rating = _rating.value
-//            )
         }
     }
 
 
     private fun NewDailyCookingDto.asDomainModel(): DailyCooking {
         return DailyCooking(
-//            id = this.id,
             name = this.name,
             ingredients = this.ingredients,
             image = this.image,
