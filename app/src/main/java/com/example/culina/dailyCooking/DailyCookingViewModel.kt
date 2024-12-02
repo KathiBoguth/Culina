@@ -1,7 +1,9 @@
 package com.example.culina.dailyCooking
 
+import android.content.ContentResolver
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
+import android.net.Uri
+import androidx.core.graphics.scale
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.culina.dailyCooking.database.DailyCooking
@@ -9,6 +11,7 @@ import com.example.culina.dailyCooking.database.DailyCookingRepository
 import com.example.culina.dailyCooking.database.dto.NewDailyCookingDto
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import java.util.Date
@@ -46,16 +49,8 @@ class DailyCookingViewModel @Inject constructor(
                 _ingredients.emit(result.ingredients)
                 _rating.emit(result.rating)
                 if (result.image != null) {
-                    val imageByteArray = dailyCookingRepository.getDailyCookingImage(result.image)
-                    if (imageByteArray != null) {
-                        _imageBitmap.emit(
-                            BitmapFactory.decodeByteArray(
-                                imageByteArray,
-                                0,
-                                imageByteArray.size
-                            )
-                        )
-                    }
+                    val image = dailyCookingRepository.getDailyCookingImage(result.image)
+                    _imageBitmap.emit(image?.scale(width = 1025, height = 1025))
                 }
             }
         }
@@ -74,11 +69,13 @@ class DailyCookingViewModel @Inject constructor(
     }
 
     fun onSaveDailyCooking(
-        image: ByteArray,
+        imageUri: Uri,
         imageName: String,
-    ) {
+        contentResolver: ContentResolver
+    ): MutableSharedFlow<Boolean> {
+        val flow = MutableStateFlow(false)
         viewModelScope.launch {
-            dailyCookingRepository.createDailyCooking(
+            val result = dailyCookingRepository.createDailyCooking(
                 DailyCooking(
                     name = _name.value,
                     ingredients = _ingredients.value,
@@ -86,9 +83,12 @@ class DailyCookingViewModel @Inject constructor(
                     rating = _rating.value,
                 ),
                 imageName = imageName,
-                imageFile = image
+                imageUri = imageUri,
+                contentResolver = contentResolver
             )
+            flow.emit(result)
         }
+        return flow
     }
 
 

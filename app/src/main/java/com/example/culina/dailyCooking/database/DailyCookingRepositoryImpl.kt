@@ -1,10 +1,15 @@
 package com.example.culina.dailyCooking.database
 
+import android.content.ContentResolver
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.net.Uri
 import com.example.culina.dailyCooking.database.dto.NewDailyCookingDto
 import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.storage.Storage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.io.ByteArrayOutputStream
 import java.lang.Exception
 import java.time.ZoneId
 import java.util.Date
@@ -17,14 +22,21 @@ class DailyCookingRepositoryImpl @Inject constructor(
     override suspend fun createDailyCooking(
         dailyCooking: DailyCooking,
         imageName: String,
-        imageFile: ByteArray
+        imageUri: Uri,
+        contentResolver: ContentResolver
     ): Boolean {
         return try {
+            val baos = ByteArrayOutputStream()
+            contentResolver.openInputStream(imageUri)
+                ?.use {
+                    BitmapFactory.decodeStream(it).compress(Bitmap.CompressFormat.JPEG, 50, baos)
+                }
             withContext(Dispatchers.IO) {
-                val imageId = if (imageFile.isNotEmpty()) {
+                val imageByteArray = baos.toByteArray()
+                val imageId = if (imageByteArray != null) {
                     storage.from("dailyMealImage").upload(
                         path = imageName,
-                        data = imageFile,
+                        data = imageByteArray,
                         options = { upsert = true }
                     ).path
                 } else {
@@ -143,10 +155,15 @@ class DailyCookingRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getDailyCookingImage(path: String): ByteArray? {
+    override suspend fun getDailyCookingImage(path: String): Bitmap? {
         return try {
             withContext(Dispatchers.IO) {
-                storage.from("dailyMealImage").downloadPublic(path)
+                val imageByteArray = storage.from("dailyMealImage").downloadPublic(path)
+                return@withContext BitmapFactory.decodeByteArray(
+                    imageByteArray,
+                    0,
+                    imageByteArray.size
+                )
             }
         } catch (e: kotlin.Exception) {
             println(e.message)

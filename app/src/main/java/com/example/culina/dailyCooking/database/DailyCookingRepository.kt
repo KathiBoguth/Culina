@@ -1,5 +1,8 @@
 package com.example.culina.dailyCooking.database
 
+import android.content.ContentResolver
+import android.graphics.Bitmap
+import android.net.Uri
 import com.example.culina.dailyCooking.database.dto.NewDailyCookingDto
 import java.util.Date
 
@@ -7,7 +10,7 @@ import java.util.Date
 interface DailyCookingRepository {
     suspend fun createDailyCooking(
         dailyCooking: DailyCooking, imageName: String,
-        imageFile: ByteArray,
+        imageUri: Uri, contentResolver: ContentResolver
     ): Boolean
 
     suspend fun getAllDailyCooking(): List<NewDailyCookingDto>?
@@ -23,5 +26,5 @@ interface DailyCookingRepository {
         rating: Int
     )
 
-    suspend fun getDailyCookingImage(path: String): ByteArray?
+    suspend fun getDailyCookingImage(path: String): Bitmap?
 }

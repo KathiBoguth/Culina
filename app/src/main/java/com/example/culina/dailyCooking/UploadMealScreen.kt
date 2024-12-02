@@ -20,18 +20,24 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.InputChip
 import androidx.compose.material3.InputChipDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
@@ -47,6 +53,8 @@ import coil.request.ImageRequest
 import com.example.culina.R
 import com.example.culina.common.CulinaButtonPrimary
 import com.example.culina.ui.theme.AppTheme
+import kotlinx.coroutines.flow.take
+import kotlinx.coroutines.launch
 import java.io.File
 import kotlin.math.roundToInt
 
@@ -95,6 +103,9 @@ fun UploadMealScreen(imageUri: Uri) {
     val imageBitmap by viewModel.imageBitmap.collectAsState(null)
     var ingredient by rememberSaveable { mutableStateOf("") }
 
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+
     val context = LocalContext.current
 
     fun addIngredient() {
@@ -106,75 +117,86 @@ fun UploadMealScreen(imageUri: Uri) {
         viewModel.onIngredientsChange(ingredientList.minusElement(ingredient))
 
     }
-    Column(
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-        horizontalAlignment = Alignment.Companion.CenterHorizontally
-    ) {
-        if (imageBitmap == null) {
-            MealPhoto(imageUri)
-        } else {
-            MealPhotoBitmap(imageBitmap!!)
-        }
-        TextField(
-            value = title,
-            onValueChange = { it -> viewModel.onNameChange(it) },
-            label = { Text("Title") }
-        )
-        TextField(
-            value = ingredient,
-            onValueChange = { it -> ingredient = it },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-            keyboardActions = KeyboardActions(
-                onDone = { addIngredient() }
-            ),
-            label = { Text("Ingredients") },
-            trailingIcon = { AddIngredientButton(::addIngredient) }
-        )
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            ingredientList.forEach { ingredient ->
-                InputChip(
-                    selected = true,
-                    label = { Text(ingredient) },
-                    onClick = {},
-                    trailingIcon = { DeleteIngredientButton { deleteIngredient(ingredient) } },
-                    colors = InputChipDefaults.inputChipColors(
-                        selectedContainerColor = MaterialTheme.colorScheme.secondary,
-                        selectedLabelColor = MaterialTheme.colorScheme.onSecondary
+    Scaffold(
+        containerColor = Color(0, 0, 0, 0),
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState)
+        },
+    ) { contentPadding ->
+        Column(
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalAlignment = Alignment.Companion.CenterHorizontally
+        ) {
+            if (imageBitmap == null) {
+                MealPhoto(imageUri)
+            } else {
+                MealPhotoBitmap(imageBitmap!!)
+            }
+            TextField(
+                value = title,
+                onValueChange = { it -> viewModel.onNameChange(it) },
+                label = { Text("Title") }
+            )
+            TextField(
+                value = ingredient,
+                onValueChange = { it -> ingredient = it },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(
+                    onDone = { addIngredient() }
+                ),
+                label = { Text("Ingredients") },
+                trailingIcon = { AddIngredientButton(::addIngredient) }
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                ingredientList.forEach { ingredient ->
+                    InputChip(
+                        selected = true,
+                        label = { Text(ingredient) },
+                        onClick = {},
+                        trailingIcon = { DeleteIngredientButton { deleteIngredient(ingredient) } },
+                        colors = InputChipDefaults.inputChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.secondary,
+                            selectedLabelColor = MaterialTheme.colorScheme.onSecondary
 
+                        )
                     )
+                }
+            }
+            Row(
+                Modifier.Companion
+                    .fillMaxWidth()
+                    .padding(12.dp)
+            ) {
+                Text(
+                    "Rate yourself!",
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold
                 )
             }
-        }
-        Row(
-            Modifier.Companion
-                .fillMaxWidth()
-                .padding(12.dp)
-        ) {
-            Text(
-                "Rate yourself!",
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Bold
-            )
-        }
-        Row(Modifier.Companion.width(240.dp)) {
-            Slider(sliderPosition.toFloat(),
-                onValueChange = { viewModel.onRatingChange(it.roundToInt()) },
-                valueRange = 0f..5f,
-                steps = 4,
-                track = { sliderState -> RatingTrack(sliderState.value.roundToInt()) },
-                thumb = {}
-            )
-        }
-        CulinaButtonPrimary("Save & Upload") {
-            val imageByteArray = context.contentResolver.openInputStream(imageUri)
-                ?.use { it.buffered().readBytes() }
-            if (imageByteArray != null) {
-                viewModel.onSaveDailyCooking(
-                    imageName = File(imageUri.path ?: "test.png").name,
-                    image = imageByteArray
+            Row(Modifier.Companion.width(240.dp)) {
+                Slider(sliderPosition.toFloat(),
+                    onValueChange = { viewModel.onRatingChange(it.roundToInt()) },
+                    valueRange = 0f..5f,
+                    steps = 4,
+                    track = { sliderState -> RatingTrack(sliderState.value.roundToInt()) },
+                    thumb = {}
                 )
-
+            }
+            CulinaButtonPrimary("Save & Upload") {
+                val result = viewModel.onSaveDailyCooking(
+                    imageName = File(imageUri.path ?: "test.jpeg").name,
+                    imageUri = imageUri,
+                    contentResolver = context.contentResolver
+                )
+                scope.launch {
+                    result.take(2).collect {
+                        println("saved? $it")
+                        if (it) {
+                            snackbarHostState.showSnackbar("Upload successful")
+                        }
+                    }
+                }
             }
         }
     }

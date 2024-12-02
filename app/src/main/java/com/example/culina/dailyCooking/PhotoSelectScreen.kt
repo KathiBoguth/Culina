@@ -43,7 +43,7 @@ fun PhotoSelectScreen(updateImageUri: (Uri) -> Unit) {
 fun Context.createTempPictureUri(
     provider: String = "${BuildConfig.APPLICATION_ID}.provider",
     fileName: String,
-    fileExtension: String = ".png"
+    fileExtension: String = ".jpeg"
 ): Uri {
     val tempFile = File.createTempFile(
         fileName, fileExtension, cacheDir
