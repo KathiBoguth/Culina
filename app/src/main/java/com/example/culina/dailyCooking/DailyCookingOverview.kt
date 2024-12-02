@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -22,7 +23,7 @@ import com.example.culina.common.BackgroundPanel
 import com.example.culina.common.CulinaButtonIcon
 
 @Composable
-fun DailyCookingOverview(innerPadding: PaddingValues) {
+fun DailyCookingOverview(innerPadding: PaddingValues, snackbarHostState: SnackbarHostState) {
     var photoSelectActive by rememberSaveable { mutableStateOf(false) }
     var showUploadMealScreen by rememberSaveable { mutableStateOf(false) }
     var capturedImageUri by rememberSaveable {
@@ -47,7 +48,7 @@ fun DailyCookingOverview(innerPadding: PaddingValues) {
         if (photoSelectActive) {
             PhotoSelectScreen({ uri -> updateImageUri(uri) })
         } else if (showUploadMealScreen || dailyMealName != "") {
-            UploadMealScreen(capturedImageUri)
+            UploadMealScreen(capturedImageUri, snackbarHostState)
         } else {
             Row(
                 Modifier

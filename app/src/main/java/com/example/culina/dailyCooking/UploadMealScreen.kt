@@ -20,9 +20,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.InputChip
 import androidx.compose.material3.InputChipDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -30,14 +28,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
@@ -94,107 +90,138 @@ fun MealPhotoBitmap(bitmap: Bitmap) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun UploadMealScreen(imageUri: Uri) {
+fun UploadMealScreen(imageUri: Uri, snackbarHostState: SnackbarHostState) {
     val viewModel: DailyCookingViewModel = hiltViewModel()
 
     val ingredientList by viewModel.ingredients.collectAsState(emptySet())
     val sliderPosition: Int by viewModel.rating.collectAsState(0)
     val title by viewModel.name.collectAsState("")
+    var isTitleError by rememberSaveable { mutableStateOf(false) }
     val imageBitmap by viewModel.imageBitmap.collectAsState(null)
     var ingredient by rememberSaveable { mutableStateOf("") }
+    var isIngredientError by rememberSaveable { mutableStateOf(false) }
+
 
     val scope = rememberCoroutineScope()
-    val snackbarHostState = remember { SnackbarHostState() }
 
     val context = LocalContext.current
 
+    fun validateTitle() {
+        isTitleError = title.isBlank()
+    }
+
     fun addIngredient() {
-        viewModel.onIngredientsChange(ingredientList.plusElement(ingredient))
-        ingredient = ""
+        if (ingredient.isNotBlank()) {
+            viewModel.onIngredientsChange(ingredientList.plusElement(ingredient))
+            ingredient = ""
+        } else {
+            isIngredientError = true
+        }
     }
 
     fun deleteIngredient(ingredient: String) {
         viewModel.onIngredientsChange(ingredientList.minusElement(ingredient))
 
     }
-    Scaffold(
-        containerColor = Color(0, 0, 0, 0),
-        snackbarHost = {
-            SnackbarHost(hostState = snackbarHostState)
-        },
-    ) { contentPadding ->
-        Column(
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            horizontalAlignment = Alignment.Companion.CenterHorizontally
-        ) {
-            if (imageBitmap == null) {
-                MealPhoto(imageUri)
-            } else {
-                MealPhotoBitmap(imageBitmap!!)
-            }
-            TextField(
-                value = title,
-                onValueChange = { it -> viewModel.onNameChange(it) },
-                label = { Text("Title") }
-            )
-            TextField(
-                value = ingredient,
-                onValueChange = { it -> ingredient = it },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                keyboardActions = KeyboardActions(
-                    onDone = { addIngredient() }
-                ),
-                label = { Text("Ingredients") },
-                trailingIcon = { AddIngredientButton(::addIngredient) }
-            )
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                ingredientList.forEach { ingredient ->
-                    InputChip(
-                        selected = true,
-                        label = { Text(ingredient) },
-                        onClick = {},
-                        trailingIcon = { DeleteIngredientButton { deleteIngredient(ingredient) } },
-                        colors = InputChipDefaults.inputChipColors(
-                            selectedContainerColor = MaterialTheme.colorScheme.secondary,
-                            selectedLabelColor = MaterialTheme.colorScheme.onSecondary
-
-                        )
+    Column(
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalAlignment = Alignment.Companion.CenterHorizontally
+    ) {
+        if (imageBitmap == null) {
+            MealPhoto(imageUri)
+        } else {
+            MealPhotoBitmap(imageBitmap!!)
+        }
+        TextField(
+            value = title,
+            onValueChange = { it ->
+                viewModel.onNameChange(it)
+                validateTitle()
+            },
+            label = { Text("Title") },
+            isError = isTitleError,
+            supportingText = {
+                if (isTitleError) {
+                    Text(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = "Title is mandatory",
+                        color = MaterialTheme.colorScheme.error
                     )
                 }
             }
-            Row(
-                Modifier.Companion
-                    .fillMaxWidth()
-                    .padding(12.dp)
-            ) {
-                Text(
-                    "Rate yourself!",
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold
+        )
+        TextField(
+            value = ingredient,
+            onValueChange = { it -> ingredient = it },
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+            keyboardActions = KeyboardActions(
+                onDone = { addIngredient() }
+            ),
+            label = { Text("Ingredients") },
+            trailingIcon = {
+                AddIngredientButton(::addIngredient)
+            },
+            isError = isIngredientError,
+            supportingText = {
+                if (isIngredientError) {
+                    Text(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = "Please type in an ingredient",
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            }
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            ingredientList.forEach { ingredient ->
+                InputChip(
+                    selected = true,
+                    label = { Text(ingredient) },
+                    onClick = {},
+                    trailingIcon = { DeleteIngredientButton { deleteIngredient(ingredient) } },
+                    colors = InputChipDefaults.inputChipColors(
+                        selectedContainerColor = MaterialTheme.colorScheme.secondary,
+                        selectedLabelColor = MaterialTheme.colorScheme.onSecondary
+                    )
                 )
             }
-            Row(Modifier.Companion.width(240.dp)) {
-                Slider(sliderPosition.toFloat(),
-                    onValueChange = { viewModel.onRatingChange(it.roundToInt()) },
-                    valueRange = 0f..5f,
-                    steps = 4,
-                    track = { sliderState -> RatingTrack(sliderState.value.roundToInt()) },
-                    thumb = {}
-                )
+        }
+        Row(
+            Modifier.Companion
+                .fillMaxWidth()
+                .padding(12.dp)
+        ) {
+            Text(
+                "Rate yourself!",
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Bold
+            )
+        }
+        Row(Modifier.Companion.width(240.dp)) {
+            Slider(sliderPosition.toFloat(),
+                onValueChange = { viewModel.onRatingChange(it.roundToInt()) },
+                valueRange = 0f..5f,
+                steps = 4,
+                track = { sliderState -> RatingTrack(sliderState.value.roundToInt()) },
+                thumb = {}
+            )
+        }
+        CulinaButtonPrimary("Save & Upload") {
+            validateTitle()
+            if (isTitleError) {
+                return@CulinaButtonPrimary
             }
-            CulinaButtonPrimary("Save & Upload") {
-                val result = viewModel.onSaveDailyCooking(
-                    imageName = File(imageUri.path ?: "test.jpeg").name,
-                    imageUri = imageUri,
-                    contentResolver = context.contentResolver
-                )
-                scope.launch {
-                    result.take(2).collect {
-                        println("saved? $it")
-                        if (it) {
-                            snackbarHostState.showSnackbar("Upload successful")
-                        }
+            val result = viewModel.onSaveDailyCooking(
+                imageName = File(imageUri.path ?: "test.jpeg").name,
+                imageUri = imageUri,
+                contentResolver = context.contentResolver
+            )
+            scope.launch {
+                result.take(2).collect {
+                    println("saved? $it")
+                    if (it) {
+                        snackbarHostState.showSnackbar("Upload successful")
                     }
                 }
             }
@@ -247,7 +274,7 @@ fun DeleteIngredientButton(onDeleteClick: () -> Unit) {
 @Composable
 fun UploadMealPreview() {
     AppTheme(dynamicColor = false) {
-        UploadMealScreen(Uri.EMPTY)
+        UploadMealScreen(Uri.EMPTY, SnackbarHostState())
 
     }
 }

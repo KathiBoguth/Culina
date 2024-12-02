@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -49,8 +51,16 @@ class MainActivity : ComponentActivity() {
                     ).indexOf(destination.route)
             })
 
+            val snackbarHostState = remember { SnackbarHostState() }
+
+
             AppTheme(dynamicColor = false) {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                Scaffold(
+                    modifier = Modifier.fillMaxSize(),
+                    snackbarHost = {
+                        SnackbarHost(hostState = snackbarHostState)
+                    },
+                ) { innerPadding ->
                     Box(
                         modifier = with(Modifier) {
                             fillMaxSize()
@@ -61,7 +71,11 @@ class MainActivity : ComponentActivity() {
                                 )
 
                         }) {
-                        AppNavHost(navController = navController, innerPadding = innerPadding)
+                        AppNavHost(
+                            navController = navController,
+                            innerPadding = innerPadding,
+                            snackbarHostState = snackbarHostState
+                        )
                     }
                     Row(Modifier.fillMaxSize(), verticalAlignment = Alignment.Bottom) {
                         BottomNavigationBar(navController)
