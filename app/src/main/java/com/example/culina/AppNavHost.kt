@@ -11,6 +11,8 @@ import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.example.culina.authentication.signin.SignInScreen
+import com.example.culina.authentication.signup.SignUpScreen
 import com.example.culina.dailyCooking.DailyCookingOverview
 import com.example.culina.home.HomeScreen
 import com.example.culina.quiz.Quiz
@@ -24,14 +26,23 @@ val navItemOrder = listOf("home", "quiz", "cooking", "social")
 fun AppNavHost(
     navController: NavHostController,
     innerPadding: PaddingValues,
-    startDestination: String = BottomNavItem.Home.route,
+    startDestination: String = "signin",//BottomNavItem.Home.route,
     snackbarHostState: SnackbarHostState
 ) {
-
     NavHost(
         navController = navController,
         startDestination = startDestination
     ) {
+        composable("signin")
+        {
+            SignInScreen(
+                snackBarHostState = snackbarHostState,
+                navController = navController,
+                innerPadding = innerPadding
+            )
+        }
+        composable("signup")
+        { SignUpScreen(snackBarHostState = snackbarHostState, innerPadding = innerPadding) }
         composable(
             BottomNavItem.Home.route,
             enterTransition = {
@@ -39,7 +50,8 @@ fun AppNavHost(
             },
             exitTransition = { return@composable slideOut(initialState, targetState) }) {
             HomeScreen(
-                innerPadding
+                innerPadding = innerPadding,
+                navController = navController
             )
         }
         composable(BottomNavItem.Quiz.route, enterTransition = {

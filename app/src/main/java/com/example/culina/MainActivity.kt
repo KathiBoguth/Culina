@@ -25,6 +25,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.culina.ui.theme.AppTheme
 import dagger.hilt.android.AndroidEntryPoint
+import kotlin.math.max
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -38,7 +39,7 @@ class MainActivity : ComponentActivity() {
             )
             var positionIndex by remember { mutableIntStateOf(0) }
             val currentPosition by animateFloatAsState(
-                imagePositions[positionIndex],
+                imagePositions[max(positionIndex, 0)],
                 label = "BackgroundMove"
             )
             navController.addOnDestinationChangedListener(NavController.OnDestinationChangedListener { controller, destination, arguments ->

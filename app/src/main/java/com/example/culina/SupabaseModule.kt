@@ -1,5 +1,7 @@
 package com.example.culina
 
+import com.example.culina.authentication.AuthenticationRepository
+import com.example.culina.authentication.AuthenticationRepositoryImpl
 import com.example.culina.dailyCooking.database.DailyCookingRepository
 import com.example.culina.dailyCooking.database.DailyCookingRepositoryImpl
 import dagger.Module
@@ -63,5 +65,13 @@ object SupabaseModule {
         storage: Storage
     ): DailyCookingRepository {
         return DailyCookingRepositoryImpl(postgrest, storage)
+    }
+
+    @Provides
+    @Singleton
+    fun provideAuthenticationRepository(
+        auth: Auth
+    ): AuthenticationRepository {
+        return AuthenticationRepositoryImpl(auth)
     }
 }
