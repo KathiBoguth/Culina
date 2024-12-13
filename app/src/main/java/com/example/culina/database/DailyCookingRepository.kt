@@ -1,9 +1,9 @@
-package com.example.culina.dailyCooking.database
+package com.example.culina.database
 
 import android.content.ContentResolver
 import android.graphics.Bitmap
 import android.net.Uri
-import com.example.culina.dailyCooking.database.dto.NewDailyCookingDto
+import com.example.culina.database.dto.NewDailyCookingDto
 import java.util.Date
 
 

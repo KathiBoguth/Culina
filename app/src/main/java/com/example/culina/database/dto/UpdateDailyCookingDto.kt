@@ -1,4 +1,4 @@
-package com.example.culina.dailyCooking.database.dto
+package com.example.culina.database.dto
 
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName

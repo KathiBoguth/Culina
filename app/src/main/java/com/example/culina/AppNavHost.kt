@@ -42,7 +42,13 @@ fun AppNavHost(
             )
         }
         composable("signup")
-        { SignUpScreen(snackBarHostState = snackbarHostState, innerPadding = innerPadding) }
+        {
+            SignUpScreen(
+                snackBarHostState = snackbarHostState,
+                navController = navController,
+                innerPadding = innerPadding
+            )
+        }
         composable(
             BottomNavItem.Home.route,
             enterTransition = {

@@ -6,9 +6,11 @@ import android.net.Uri
 import androidx.core.graphics.scale
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.culina.dailyCooking.database.DailyCooking
-import com.example.culina.dailyCooking.database.DailyCookingRepository
-import com.example.culina.dailyCooking.database.dto.NewDailyCookingDto
+import com.example.culina.authentication.AuthenticationRepository
+import com.example.culina.database.DailyCooking
+import com.example.culina.database.DailyCookingRepository
+import com.example.culina.database.ScoreRepository
+import com.example.culina.database.dto.NewDailyCookingDto
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -21,6 +23,8 @@ import javax.inject.Inject
 @HiltViewModel
 class DailyCookingViewModel @Inject constructor(
     private val dailyCookingRepository: DailyCookingRepository,
+    private val scoreRepository: ScoreRepository,
+    private val authenticationRepository: AuthenticationRepository
 ) : ViewModel() {
 
     private val _name = MutableStateFlow("")
@@ -87,10 +91,26 @@ class DailyCookingViewModel @Inject constructor(
                 contentResolver = contentResolver
             )
             flow.emit(result)
+            if (result) {
+                updateScore(50)
+            }
         }
         return flow
     }
 
+    fun updateScore(claimedPoints: Int) {
+        viewModelScope.launch {
+            val userId = authenticationRepository.getCurrentSession()?.user?.id
+            if (userId == null) {
+                return@launch
+            }
+            val currentScore = scoreRepository.getScoreByUser(userId)
+            if (currentScore == null) {
+                return@launch
+            }
+            scoreRepository.updateScore(currentScore + claimedPoints, userId)
+        }
+    }
 
     private fun NewDailyCookingDto.asDomainModel(): DailyCooking {
         return DailyCooking(

@@ -5,6 +5,8 @@ import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.auth.status.SessionStatus
 import io.github.jan.supabase.auth.user.UserSession
 import kotlinx.coroutines.flow.first
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import javax.inject.Inject
 
 class AuthenticationRepositoryImpl @Inject constructor(
@@ -23,15 +25,23 @@ class AuthenticationRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun signUp(email: String, password: String): SignInUpResult {
+    override suspend fun signUp(
+        displayName: String,
+        email: String,
+        password: String
+    ): SignInUpResult {
         return try {
             auth.signUpWith(Email) {
+                this.data = buildJsonObject {
+                    put("display_name", displayName)
+                }
                 this.email = email
                 this.password = password
             }
 
             SignInUpResult.Success
         } catch (e: Exception) {
+            println("signup exception ${e.message}")
             SignInUpResult.Failed(e.message ?: "Unknown Error")
         }
     }

@@ -1,4 +1,4 @@
-package com.example.culina.dailyCooking.database
+package com.example.culina.database
 
 data class DailyCooking(
 

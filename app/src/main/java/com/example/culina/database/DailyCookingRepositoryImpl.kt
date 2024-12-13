@@ -1,10 +1,10 @@
-package com.example.culina.dailyCooking.database
+package com.example.culina.database
 
 import android.content.ContentResolver
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
-import com.example.culina.dailyCooking.database.dto.NewDailyCookingDto
+import com.example.culina.database.dto.NewDailyCookingDto
 import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.storage.Storage
 import kotlinx.coroutines.Dispatchers

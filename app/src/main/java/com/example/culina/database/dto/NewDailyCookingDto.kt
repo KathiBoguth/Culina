@@ -1,10 +1,10 @@
-package com.example.culina.dailyCooking.database.dto
+package com.example.culina.database.dto
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class NewDailyCookingDto (
+data class NewDailyCookingDto(
 
     @SerialName("name")
     val name: String,
@@ -18,4 +18,4 @@ data class NewDailyCookingDto (
     @SerialName("rating")
     val rating: Int,
 
-)
+    )
