@@ -5,7 +5,6 @@ import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
@@ -27,7 +26,6 @@ fun AppNavHost(
     navController: NavHostController,
     innerPadding: PaddingValues,
     startDestination: String = "signin",//BottomNavItem.Home.route,
-    snackbarHostState: SnackbarHostState
 ) {
     NavHost(
         navController = navController,
@@ -36,7 +34,6 @@ fun AppNavHost(
         composable("signin")
         {
             SignInScreen(
-                snackBarHostState = snackbarHostState,
                 navController = navController,
                 innerPadding = innerPadding
             )
@@ -44,7 +41,6 @@ fun AppNavHost(
         composable("signup")
         {
             SignUpScreen(
-                snackBarHostState = snackbarHostState,
                 navController = navController,
                 innerPadding = innerPadding
             )
@@ -75,14 +71,14 @@ fun AppNavHost(
             exitTransition = { return@composable slideOut(initialState, targetState) }) {
             DailyCookingOverview(
                 innerPadding,
-                snackbarHostState
+                navController
             )
         }
         composable(BottomNavItem.Social.route, enterTransition = {
             return@composable slideIn(initialState, targetState)
         }, exitTransition = { return@composable slideOut(initialState, targetState) }) {
             Social(
-                innerPadding
+                innerPadding = innerPadding
             )
         }
     }

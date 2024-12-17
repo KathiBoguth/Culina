@@ -4,6 +4,7 @@ import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.auth.status.SessionStatus
 import io.github.jan.supabase.auth.user.UserSession
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -44,6 +45,10 @@ class AuthenticationRepositoryImpl @Inject constructor(
             println("signup exception ${e.message}")
             SignInUpResult.Failed(e.message ?: "Unknown Error")
         }
+    }
+
+    override suspend fun getSessionStatus(): StateFlow<SessionStatus> {
+        return auth.sessionStatus
     }
 
     override suspend fun getCurrentSession(): UserSession? {

@@ -46,7 +46,10 @@ class DailyCookingViewModel @Inject constructor(
     fun getDailyCookingForToday() {
         viewModelScope.launch {
             val result =
-                dailyCookingRepository.getDailyCookingByDate(Date())
+                dailyCookingRepository.getDailyCookingByDate(
+                    Date(),
+                    authenticationRepository.getCurrentSession()?.user?.id
+                )
                     ?.asDomainModel()
             if (result != null) {
                 _name.emit(result.name)

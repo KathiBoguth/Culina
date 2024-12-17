@@ -75,12 +75,15 @@ class MainActivity : ComponentActivity() {
                         AppNavHost(
                             navController = navController,
                             innerPadding = innerPadding,
-                            snackbarHostState = snackbarHostState
                         )
                     }
-                    Row(Modifier.fillMaxSize(), verticalAlignment = Alignment.Bottom) {
-                        BottomNavigationBar(navController)
+                    if (navController.currentDestination?.route != "signin"
+                        && navController.currentDestination?.route != "signup"
+                    ) {
+                        Row(Modifier.fillMaxSize(), verticalAlignment = Alignment.Bottom) {
+                            BottomNavigationBar(navController)
 
+                        }
                     }
                 }
             }

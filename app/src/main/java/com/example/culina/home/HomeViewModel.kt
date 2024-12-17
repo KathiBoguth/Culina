@@ -16,8 +16,16 @@ class HomeViewModel @Inject constructor(
     private val scoreRepository: ScoreRepository
 ) : ViewModel() {
 
+    private val _name = MutableStateFlow("")
+    val name: Flow<String> = _name
+
     private val _score = MutableStateFlow(0)
     val score: Flow<Int> = _score
+
+    init {
+        getScore()
+        getName()
+    }
 
     fun signOut(): MutableStateFlow<Boolean> {
         val flow = MutableStateFlow(false)
@@ -34,6 +42,16 @@ class HomeViewModel @Inject constructor(
                 scoreRepository.getScoreByUser(authenticationRepository.getCurrentSession()?.user?.id)
             if (result != null) {
                 _score.value = result
+            }
+        }
+    }
+
+    fun getName() {
+        viewModelScope.launch {
+            val result =
+                authenticationRepository.getCurrentSession()?.user?.userMetadata?.get("display_name")
+            if (result != null) {
+                _name.value = result.toString().removeSurrounding('"'.toString())
             }
         }
     }

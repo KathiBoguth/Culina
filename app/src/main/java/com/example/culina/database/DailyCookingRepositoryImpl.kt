@@ -4,6 +4,7 @@ import android.content.ContentResolver
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
+import com.example.culina.database.dto.DisplayDailyCookingDto
 import com.example.culina.database.dto.NewDailyCookingDto
 import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.storage.Storage
@@ -57,10 +58,11 @@ class DailyCookingRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getAllDailyCooking(): List<NewDailyCookingDto>? {
+    override suspend fun getAllDailyCooking(): List<DisplayDailyCookingDto>? {
         return withContext(Dispatchers.IO) {
             postgrest.from("dailycooking")
-                .select().decodeList<NewDailyCookingDto>()
+                .select()
+                .decodeList<DisplayDailyCookingDto>()
         }
     }
 
@@ -80,7 +82,10 @@ class DailyCookingRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getDailyCookingByDate(date: Date): NewDailyCookingDto? {
+    override suspend fun getDailyCookingByDate(date: Date, userId: String?): NewDailyCookingDto? {
+        if (userId == null) {
+            return null
+        }
         val localDate = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
         return try {
             withContext(Dispatchers.IO) {
@@ -95,6 +100,7 @@ class DailyCookingRepositoryImpl @Inject constructor(
                                 "created_at",
                                 localDate.plusDays(1).atStartOfDay()
                             )
+                            eq("user_id", userId)
                         }
                     }
                 }.decodeSingle<NewDailyCookingDto>()

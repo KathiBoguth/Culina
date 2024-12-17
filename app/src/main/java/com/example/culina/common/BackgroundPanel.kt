@@ -18,7 +18,7 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun BackgroundPanel(innerPadding: PaddingValues, content: @Composable () -> Unit) {
-    val color = MaterialTheme.colorScheme.background
+    val color = MaterialTheme.colorScheme.surface
     val colorWithOpacity =
         Color(color.red.toFloat(), color.green.toFloat(), color.blue.toFloat(), 0.6f)
     Box(

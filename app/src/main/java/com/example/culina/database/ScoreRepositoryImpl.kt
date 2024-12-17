@@ -32,11 +32,12 @@ class ScoreRepositoryImpl @Inject constructor(
         }
         return try {
             withContext(Dispatchers.IO) {
-                postgrest.from("scores").select {
+                val result = postgrest.from("scores").select {
                     filter {
                         eq("user_id", id)
                     }
-                }.decodeSingle<ScoreDto>().score
+                }.decodeSingle<ScoreDto>()
+                return@withContext result.score
             }
         } catch (e: kotlin.Exception) {
             println(e.message)

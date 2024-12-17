@@ -6,8 +6,10 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -21,13 +23,13 @@ import androidx.compose.material3.InputChip
 import androidx.compose.material3.InputChipDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -44,10 +46,13 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.culina.R
 import com.example.culina.common.CulinaButtonPrimary
+import com.example.culina.common.PointsEarnedAnimation
 import com.example.culina.ui.theme.AppTheme
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.launch
@@ -90,7 +95,7 @@ fun MealPhotoBitmap(bitmap: Bitmap) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun UploadMealScreen(imageUri: Uri, snackbarHostState: SnackbarHostState) {
+fun UploadMealScreen(imageUri: Uri, navController: NavController) {
     val viewModel: DailyCookingViewModel = hiltViewModel()
 
     val ingredientList by viewModel.ingredients.collectAsState(emptySet())
@@ -100,6 +105,7 @@ fun UploadMealScreen(imageUri: Uri, snackbarHostState: SnackbarHostState) {
     val imageBitmap by viewModel.imageBitmap.collectAsState(null)
     var ingredient by rememberSaveable { mutableStateOf("") }
     var isIngredientError by rememberSaveable { mutableStateOf(false) }
+    var pointsEarnedAnimation by remember { mutableStateOf(false) }
 
 
     val scope = rememberCoroutineScope()
@@ -123,6 +129,7 @@ fun UploadMealScreen(imageUri: Uri, snackbarHostState: SnackbarHostState) {
         viewModel.onIngredientsChange(ingredientList.minusElement(ingredient))
 
     }
+
     Column(
         verticalArrangement = Arrangement.spacedBy(12.dp),
         horizontalAlignment = Alignment.Companion.CenterHorizontally
@@ -219,12 +226,20 @@ fun UploadMealScreen(imageUri: Uri, snackbarHostState: SnackbarHostState) {
             )
             scope.launch {
                 result.take(2).collect {
-                    println("saved? $it")
                     if (it) {
-                        snackbarHostState.showSnackbar("Upload successful")
+                        //snackbarHostState.showSnackbar("Upload successful")
+                        pointsEarnedAnimation = true
                     }
                 }
             }
+        }
+    }
+    if (pointsEarnedAnimation) {
+        Box(
+            Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center,
+        ) {
+            PointsEarnedAnimation(50, "New Upload!", navController)
         }
     }
 }
@@ -274,7 +289,7 @@ fun DeleteIngredientButton(onDeleteClick: () -> Unit) {
 @Composable
 fun UploadMealPreview() {
     AppTheme(dynamicColor = false) {
-        UploadMealScreen(Uri.EMPTY, SnackbarHostState())
+        UploadMealScreen(Uri.EMPTY, rememberNavController())
 
     }
 }

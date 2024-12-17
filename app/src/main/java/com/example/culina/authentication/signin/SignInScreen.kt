@@ -1,17 +1,19 @@
 package com.example.culina.authentication.signin
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -19,7 +21,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -32,35 +33,41 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.culina.R
-import com.example.culina.authentication.SignInUpResult
 import com.example.culina.common.BackgroundPanel
-import kotlinx.coroutines.flow.take
-import kotlinx.coroutines.launch
 
 @Composable
 fun SignInScreen(
     viewModel: SignInViewModel = hiltViewModel(),
-    snackBarHostState: SnackbarHostState,
     navController: NavController,
     innerPadding: PaddingValues
 ) {
-    val coroutineScope = rememberCoroutineScope()
-    val signedIn by viewModel.signedIn.collectAsState(false)
+    val signedInStatus by viewModel.signedInStatus.collectAsState(SignedInStatus.Loading)
 
-    LaunchedEffect(Unit, signedIn) {
-        if (signedIn) {
-            navController.navigate("home")
-        }
-        viewModel.getCurrentSession().collect {
-            when (it) {
-                is SignInUpResult.Failed -> {}
-                SignInUpResult.Loading -> {}
-                SignInUpResult.Success -> navController.navigate("home")
-            }
+    LaunchedEffect(signedInStatus) {
+        when (signedInStatus) {
+            SignedInStatus.Loading -> {}
+            SignedInStatus.SignedIn -> navController.navigate("home")
+            SignedInStatus.NoSession -> {}
         }
     }
+    when (signedInStatus) {
+        SignedInStatus.Loading -> LoadingSpinner()
+        SignedInStatus.SignedIn -> {}
+        SignedInStatus.NoSession -> SignInForm(
+            navController = navController,
+            innerPadding = innerPadding
+        )
+    }
+}
 
+@Composable
+fun SignInForm(
+    viewModel: SignInViewModel = hiltViewModel(),
+    navController: NavController,
+    innerPadding: PaddingValues
+) {
     BackgroundPanel(innerPadding) {
+
         Column(
             modifier = Modifier
                 .padding(20.dp)
@@ -119,21 +126,9 @@ fun SignInScreen(
                 .padding(top = 12.dp),
                 onClick = {
                     localSoftwareKeyboardController?.hide()
-                    val resultFlow = viewModel.onSignIn()
-
-                    coroutineScope.launch {
-                        resultFlow.take(2).collect {
-                            val message = when (it) {
-                                is SignInUpResult.Failed -> "Log in failed. ${it.errorMessage}"
-                                SignInUpResult.Loading -> "Please wait.."
-                                SignInUpResult.Success -> "Sign in successfully!"
-                            }
-                            snackBarHostState.showSnackbar(
-                                message = message,
-                            )
-                        }
-                    }
-                }) {
+                    viewModel.onSignIn()
+                }
+            ) {
                 Text("Sign in")
             }
             OutlinedButton(modifier = Modifier
@@ -163,5 +158,12 @@ fun PasswordVisibilityToggleIcon(
 
     IconButton(onClick = onTogglePasswordVisibility) {
         image
+    }
+}
+
+@Composable
+fun LoadingSpinner() {
+    Box(modifier = Modifier.fillMaxSize()) {
+        CircularProgressIndicator()
     }
 }
