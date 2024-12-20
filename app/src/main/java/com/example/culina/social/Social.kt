@@ -1,8 +1,8 @@
 package com.example.culina.social
 
-import android.graphics.Bitmap
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.ColorScheme
@@ -30,6 +32,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -48,16 +51,30 @@ fun Social(
 
     BackgroundPanel(innerPadding) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("Your Feed", style = MaterialTheme.typography.titleMedium)
-            Column {
-                for (meal in allMeals) {
-
-                    val image: Bitmap = allImages.getOrDefault(
-                        meal.image ?: "",
+            Text("Your Feed", style = MaterialTheme.typography.titleLarge)
+            LazyColumn(
+                modifier = Modifier.fillMaxWidth(),
+                contentPadding = PaddingValues(12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(allMeals) { meal ->
+                    val image = if (meal.image != null) {
+                        allImages.getOrElse(meal.image) {
+                            viewModel.fetchImage(meal.image)
+                            ImageBitmap.imageResource(R.drawable.meal).asAndroidBitmap()
+                        }
+                    } else {
                         ImageBitmap.imageResource(R.drawable.meal).asAndroidBitmap()
-                    )
+
+                    }
+                    val userName = if (meal.userName.isNullOrBlank()) {
+                        "Anonymous"
+                    } else {
+                        meal.userName!!
+                    }
                     CookingCard(
-                        userName = "todo",//meal.userName,
+                        userName = userName,
                         imageBitmap = image.asImageBitmap(),
                         title = meal.name,
                         ingredients = meal.ingredients
@@ -78,14 +95,15 @@ fun CookingCard(
     val color = getRandomUserIconColor(MaterialTheme.colorScheme)
     Card(
         modifier = Modifier
-            .size(width = 240.dp, height = 240.dp)
+            .size(width = 280.dp, height = 480.dp)
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
 
             Image(
                 bitmap = imageBitmap,
                 modifier = Modifier.fillMaxSize(),
-                contentDescription = "Meal Photo"
+                contentDescription = "Meal Photo",
+                contentScale = ContentScale.FillHeight
             )
             Box(
                 modifier = Modifier
@@ -97,7 +115,7 @@ fun CookingCard(
             ) {
                 Text(
                     userName.first().uppercase(),
-                    style = MaterialTheme.typography.labelMedium,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = color.value
                 )
             }
@@ -105,24 +123,29 @@ fun CookingCard(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
-                    .height(80.dp)
+                    .height(100.dp)
                     .background(
                         Brush.verticalGradient(
                             0f to Color.Transparent,
-                            0.4f to MaterialTheme.colorScheme.surface
+                            0.3f to MaterialTheme.colorScheme.surface
                         )
                     )
-                    .padding(top = 24.dp, start = 6.dp)
+                    .padding(top = 32.dp, start = 12.dp, bottom = 12.dp)
             ) {
                 Column {
-                    Text(title, style = MaterialTheme.typography.titleSmall)
+                    Text(title, style = MaterialTheme.typography.bodyMedium)
                     Row {
 
                         for (ingredient in ingredients) {
                             InputChip(
                                 modifier = Modifier.padding(4.dp),
                                 selected = false,
-                                label = { Text(ingredient) },
+                                label = {
+                                    Text(
+                                        ingredient,
+                                        style = MaterialTheme.typography.bodySmall
+                                    )
+                                },
                                 onClick = {})
                         }
                     }

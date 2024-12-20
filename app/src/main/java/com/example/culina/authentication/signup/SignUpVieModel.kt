@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.culina.authentication.AuthenticationRepository
 import com.example.culina.authentication.SignInUpResult
 import com.example.culina.authentication.signin.SignedInStatus
-import com.example.culina.database.ScoreRepository
+import com.example.culina.database.UserProfileRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.jan.supabase.auth.status.SessionStatus
 import kotlinx.coroutines.flow.Flow
@@ -17,7 +17,7 @@ import javax.inject.Inject
 @HiltViewModel
 class SignUpViewModel @Inject constructor(
     private val authenticationRepository: AuthenticationRepository,
-    private val scoreRepository: ScoreRepository,
+    private val userProfileRepository: UserProfileRepository,
 ) : ViewModel() {
 
     private val _email = MutableStateFlow("")
@@ -66,7 +66,14 @@ class SignUpViewModel @Inject constructor(
                 password = _password.value
             )
             flow.emit(result)
-            scoreRepository.addScoreEntry()
+            val userId = authenticationRepository.getCurrentSession()?.user?.id
+            if (userId != null) {
+                userProfileRepository.addEntry(
+                    userId,
+                    _displayName.value
+                )
+            }
+
         }
         return flow
     }

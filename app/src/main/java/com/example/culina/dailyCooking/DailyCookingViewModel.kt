@@ -9,7 +9,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.culina.authentication.AuthenticationRepository
 import com.example.culina.database.DailyCooking
 import com.example.culina.database.DailyCookingRepository
-import com.example.culina.database.ScoreRepository
+import com.example.culina.database.UserProfileRepository
 import com.example.culina.database.dto.NewDailyCookingDto
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
@@ -23,7 +23,7 @@ import javax.inject.Inject
 @HiltViewModel
 class DailyCookingViewModel @Inject constructor(
     private val dailyCookingRepository: DailyCookingRepository,
-    private val scoreRepository: ScoreRepository,
+    private val userProfileRepository: UserProfileRepository,
     private val authenticationRepository: AuthenticationRepository
 ) : ViewModel() {
 
@@ -107,11 +107,11 @@ class DailyCookingViewModel @Inject constructor(
             if (userId == null) {
                 return@launch
             }
-            val currentScore = scoreRepository.getScoreByUser(userId)
+            val currentScore = userProfileRepository.getScoreByUser(userId)
             if (currentScore == null) {
                 return@launch
             }
-            scoreRepository.updateScore(currentScore + claimedPoints, userId)
+            userProfileRepository.updateScore(currentScore + claimedPoints, userId)
         }
     }
 

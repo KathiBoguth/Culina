@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import com.example.culina.database.dto.DisplayDailyCookingDto
 import com.example.culina.database.dto.NewDailyCookingDto
+import com.example.culina.database.dto.UserProfileDto
 import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.storage.Storage
 import kotlinx.coroutines.Dispatchers
@@ -60,9 +61,13 @@ class DailyCookingRepositoryImpl @Inject constructor(
 
     override suspend fun getAllDailyCooking(): List<DisplayDailyCookingDto>? {
         return withContext(Dispatchers.IO) {
-            postgrest.from("dailycooking")
+            val posts = postgrest.from("dailycooking")
                 .select()
-                .decodeList<DisplayDailyCookingDto>()
+                .decodeList<DisplayDailyCookingDto>().reversed()
+            posts.forEach { post ->
+                post.userName = getUserDisplayName(post.userId) ?: ""
+            }
+            return@withContext posts
         }
     }
 
@@ -172,8 +177,22 @@ class DailyCookingRepositoryImpl @Inject constructor(
                 )
             }
         } catch (e: kotlin.Exception) {
-            println(e.message)
+            println("error in getDailyCookingImage: ${e.message}")
             null
+        }
+    }
+
+    private suspend fun getUserDisplayName(userId: String): String? {
+        return try {
+            postgrest.from("user_profiles")
+                .select {
+                    filter {
+                        eq("id", userId)
+                    }
+                }.decodeSingle<UserProfileDto>().displayName
+        } catch (e: kotlin.Exception) {
+            println(e.message)
+            return null
         }
     }
 }

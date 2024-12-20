@@ -10,7 +10,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -23,12 +22,11 @@ class SocialViewModel @Inject constructor(
     private val _allPosts = MutableStateFlow(listOf<DisplayDailyCookingDto>())
     val allPosts: Flow<List<DisplayDailyCookingDto>> = _allPosts
 
-    private val _allImages = MutableSharedFlow<Map<String, Bitmap>>()
+    private val _allImages = MutableStateFlow<Map<String, Bitmap>>(mapOf())
     val allImages: Flow<Map<String, Bitmap>> = _allImages
 
     init {
         fetchAllPosts()
-        fetchAllImages()
     }
 
     fun fetchAllPosts() {
@@ -37,21 +35,17 @@ class SocialViewModel @Inject constructor(
             if (posts == null) {
                 return@launch
             }
-            _allPosts.value = posts//.sortedBy { it.date }
+            _allPosts.value = posts
         }
     }
 
-    fun fetchAllImages() {
+    fun fetchImage(id: String) {
         viewModelScope.launch {
-            _allPosts.collect {
-                val images = mutableMapOf<String, Bitmap>()
-                it.forEach {
-                    val image = getImage(it.image).await()
-                    if (image != null) {
-                        images.put(it.image ?: "", image)
-                    }
-                }
-                _allImages.emit(images)
+            val image = getImage(id).await()
+            if (image != null) {
+                val newMap = _allImages.value.toMutableMap()
+                newMap.put(id, image)
+                _allImages.emit(newMap)
             }
         }
     }

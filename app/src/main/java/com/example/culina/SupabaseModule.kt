@@ -4,8 +4,8 @@ import com.example.culina.authentication.AuthenticationRepository
 import com.example.culina.authentication.AuthenticationRepositoryImpl
 import com.example.culina.database.DailyCookingRepository
 import com.example.culina.database.DailyCookingRepositoryImpl
-import com.example.culina.database.ScoreRepository
-import com.example.culina.database.ScoreRepositoryImpl
+import com.example.culina.database.UserProfileRepository
+import com.example.culina.database.UserProfileRepositoryImpl
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -81,7 +81,7 @@ object SupabaseModule {
     @Singleton
     fun provideScoreRepository(
         postgrest: Postgrest,
-    ): ScoreRepository {
-        return ScoreRepositoryImpl(postgrest)
+    ): UserProfileRepository {
+        return UserProfileRepositoryImpl(postgrest)
     }
 }

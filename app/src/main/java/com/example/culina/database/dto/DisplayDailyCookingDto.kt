@@ -18,9 +18,9 @@ data class DisplayDailyCookingDto(
     @SerialName("rating")
     val rating: Int,
 
-//    @SerialName("created_at")
-//    val date: TimeStamp,
+    @SerialName("user_id")
+    val userId: String,
 
-//    @SerialName("display_name")
-//    val userName: String
+    @SerialName("display_name")
+    var userName: String? = null
 )

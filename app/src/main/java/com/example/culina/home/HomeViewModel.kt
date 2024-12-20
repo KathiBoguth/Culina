@@ -3,7 +3,7 @@ package com.example.culina.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.culina.authentication.AuthenticationRepository
-import com.example.culina.database.ScoreRepository
+import com.example.culina.database.UserProfileRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,7 +13,7 @@ import javax.inject.Inject
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val authenticationRepository: AuthenticationRepository,
-    private val scoreRepository: ScoreRepository
+    private val userProfileRepository: UserProfileRepository
 ) : ViewModel() {
 
     private val _name = MutableStateFlow("")
@@ -39,7 +39,7 @@ class HomeViewModel @Inject constructor(
     fun getScore() {
         viewModelScope.launch {
             val result =
-                scoreRepository.getScoreByUser(authenticationRepository.getCurrentSession()?.user?.id)
+                userProfileRepository.getScoreByUser(authenticationRepository.getCurrentSession()?.user?.id)
             if (result != null) {
                 _score.value = result
             }

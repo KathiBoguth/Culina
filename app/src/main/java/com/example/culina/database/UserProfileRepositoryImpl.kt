@@ -1,23 +1,25 @@
 package com.example.culina.database
 
-import com.example.culina.database.dto.ScoreDto
+import com.example.culina.database.dto.UserProfileDto
 import io.github.jan.supabase.postgrest.Postgrest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.lang.Exception
 import javax.inject.Inject
 
-class ScoreRepositoryImpl @Inject constructor(
+class UserProfileRepositoryImpl @Inject constructor(
     private val postgrest: Postgrest,
-) : ScoreRepository {
-    override suspend fun addScoreEntry(): Boolean {
+) : UserProfileRepository {
+    override suspend fun addEntry(userId: String, displayName: String): Boolean {
         return try {
-
             withContext(Dispatchers.IO) {
-                val scoreDto = ScoreDto(
+                val userProfileDto = UserProfileDto(
+                    displayName = displayName,
                     score = 0,
+                    profileImage = null,
+                    userId = userId
                 )
-                postgrest.from("scores").insert(scoreDto)
+                postgrest.from("user_profiles").insert(userProfileDto)
                 true
             }
             true
@@ -36,7 +38,7 @@ class ScoreRepositoryImpl @Inject constructor(
                     filter {
                         eq("user_id", id)
                     }
-                }.decodeSingle<ScoreDto>()
+                }.decodeSingle<UserProfileDto>()
                 return@withContext result.score
             }
         } catch (e: kotlin.Exception) {
